@@ -1,0 +1,64 @@
+#---- Created by Lucas-MacBook-Pro.local:/Users/luca.tubiana/Projects/kdna-border/notebooks/kdna_and_border.ipynb on 2022-01-13
+#---- DEFAULT VARIABLES (overridden by -var)
+#-- Default: assume sim from data file, no minimization 
+variable seed index 232828
+variable taudamp index 10
+variable dt equal 0.01 # timestep (must be lower than 0.0124
+variable rgspring index 3
+variable rgtarget index 94.934
+variable time index "23:30:00"
+variable restart index 0
+variable minimize index 0
+variable name index "n0604_rg0.40_rgK03.00"
+variable dumptime index 10000000
+variable restime  index 50000000
+variable runtime  index 1000000000
+#---
+print "-> Seed: ${seed}"
+print "-> Stopping after walltime: ${time}"
+print "-> Minimize: ${minimize}"
+if "${restart} > 0" &
+then &
+"print '-> Restarting a previous simulation from latest.restart'" &
+else &
+"print '-> Starting a simulation from ${datafile}'"
+print "----------------------"
+#-- MODEL
+atom_style molecular #no charge! NOTE: this command must preceed read_data.
+units lj
+include saw_fene_polymer.lmp
+#-- INIT
+boundary     p p p
+if "${restart} >0" &
+then &
+"read_restart latest.restart" &
+else &
+"read_data ${datafile}"
+#----ENSEMBLE (Langevin) --------------------------------#
+# - NVE ensemble
+# - Langevin integrator Tstart Tstop 1/friction PRNG seed
+# - sampling NVT ensemble
+mass 1 1.0 #must be defined after sim. box.
+fix 2 all nve
+fix 3 all langevin   1.0  1.0 ${taudamp}  ${seed}
+#---NEIGHBOUR LIST DETAILS
+neighbor 3.0 nsq
+#---BALANCING -------------------------------------------#
+comm_style tiled
+comm_modify cutoff 6
+balance     1.1 rcb
+fix         1 all balance ${dumptime} 1.1 rcb
+#--- MINIMIZATION ---------------------------------------#
+if "${minimize}>0" then "include minimize.lmp"
+#--- BORDER RG SPRINT -----------------------------------#
+group border molecule 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 29 30 31 32 33 34 35 36 54 55 56 57 58 59 83 84 85 86 112 113 114 115 143 144 145 146 176 177 178 179 211 212 213 214 247 248 249 250 283 284 285 286 319 320 321 322 355 356 357 358 391 392 393 394 426 427 428 429 459 460 461 462 490 491 492 493 519 520 521 522 546 547 548 549 550 551 569 570 571 572 573 574 575 576 588 589 590 591 592 593 594 595 596 597 598 599 600 601 602 603 604
+fix sprg border spring/rg ${rgspring} ${rgtarget}
+#----OUTPUT DATA ----------------------------------------#
+include output_append.lmp
+#----RUN ------------------------------------------------#
+if "!(${restart}>0)" then "reset_timestep 0"
+timestep ${dt} # needed as it might change in minimize
+timer timeout ${time} every 1000
+run ${runtime}
+write_restart latest.restart
+write_data latest.restart.dat

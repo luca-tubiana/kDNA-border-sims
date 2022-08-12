@@ -1,0 +1,18 @@
+variable dumptime index 100000
+variable restime  index 1000000
+variable runtime  index 1000000000
+variable tdtime   index 10000
+variable name     index "traj"
+#---
+print "-> Sim Name: ${name}"
+print "-> Total runtime: ${runtime}"
+print "-> Dump conf every: ${dumptime}"
+print "-> Dump restart every: ${restime}"
+print "-> Print thermo every: ${tdtime}"
+#---- Thermodyn  (temperature, energy, pressure)
+thermo ${tdtime}
+thermo_style   custom   step temp epair emol 
+#----Configurations
+restart     ${restime} ${name}.dat.restart.*
+dump    1 all custom ${dumptime} ${name}.dat.lammpstrj id mol type xu yu zu
+dump_modify 1  append yes sort id format line "%10d %6d %3d %12.6lf %12.6lf %12.6lf"

@@ -1,0 +1,25 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=24:ompthreads=1:mpiprocs=24
+##PBS -l host=hpc-g04-node01  # to select a specific machine
+#PBS -l walltime=23:50:00
+#PBS -q compphys_cpuQ
+#PBS -N n0604_rg0.10_rgK03.00
+#PBS -o n0604_rg0.10_rgK03.00.out
+#PBS -e n0604_rg0.10_rgK03.00.err
+#PBS -M luca.tubiana@unitn.it
+#PBS -m abe
+# a-b-e means send email if the job is Aborted, Begins, Ends.
+
+#-- Created by Lucas-MacBook-Pro.local:/Users/luca.tubiana/Projects/kdna-border/notebooks/kdna_and_border.ipynb on 2022-01-03
+
+module load openmpi-3.0.0
+module load Intel_parallel_studio_xe2018u2
+
+TIME="23:20:00"
+#SEED=$(od -vAn -N3 -tu4 < /dev/urandom | awk '{print $1}')
+LMP=$HOME/usr/src/lammps20/builds/build-hpc2-icc-mpi/lmp_hpc2-icc-mpi
+
+cd ${PBS_O_WORKDIR}
+#echo "Running with seed: ${SEED}" > log
+echo "starting sim n0604_rg0.10_rgK03.00" > log
+mpirun -np 24 $LMP  -v time ${TIME} -v minimize 1 -v datafile n0604_rg0.10_rgK03.00.dat -in n0604_rg0.10_rgK03.00.lmp >> log

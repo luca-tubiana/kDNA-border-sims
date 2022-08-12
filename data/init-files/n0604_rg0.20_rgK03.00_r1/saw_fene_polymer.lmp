@@ -1,0 +1,42 @@
+#-------------------------------------------------------#
+# Reference paper:                                      #
+# K. Kremer and G. S. Grest                             #
+# Dynamics of entangled linear polymer melts: 		#
+# A molecular-dynamics simulation 		    	#
+# J Chem Phys 92, 5057 (1990)                           #
+#-------------------------------------------------------#
+
+# -- COEFFICIENTS MUST BE DEFINED IN THE DATA FILE ---- #
+
+#-- set persistence length
+#variable lp index 0 
+#print "-> persistence length: ${lp}"
+#-- Non-bonded: WCA
+#  E= 4*epsilon*[ (sigma/r)^12 - (sigma/r)^6]  for r<r_cut
+#  r_cut =1.12246 = 2^(1/6) is the minimum of the potential
+#
+#  pair_coeff for lj/cut, specify 4:
+#    * atom type interacting with
+#    * atom type
+#    * epsilon (energy units)
+#    * sigma (distance units)
+#
+pair_style  lj/cut 1.12246152962189
+#pair_coeff  1 1 1.0 1.0
+pair_modify shift yes
+#-- Bonds: FENE + WCA
+#  E= - 0.5 K R0^2 ln[ 1- (r/R0)^2]
+#     + 4epsilon[ (sigma/r)^12 - (sigma/r)^6] + epsilon
+# For style fene, specify:
+#   * bond type
+#   * K (energy/distance^2)
+#   * R0 (distance)
+#   * epsilon (energy)  (LJ component)
+#   * sigma (distance)  (LJ component)
+bond_style      fene
+#bond_coeff   1     30.0     1.5     1.0       1.0
+special_bonds fene #<=== I M P O R T A N T (new command)
+#-- Bending 
+#  E = K * (1 + cos(theta)), K>0
+angle_style cosine
+#angle_coeff 1 ${lp} # lp is the persistence length
